@@ -52,6 +52,8 @@
   .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
   @media(max-width:560px){.row2{grid-template-columns:1fr}}
   .kbd{font-family:monospace;background:#070b1d;border:1px solid var(--line);border-radius:8px;padding:2px 8px}
+  .pack{border:1px solid var(--line);background:#0e1530;border-radius:16px;padding:16px;margin-top:10px}
+  .pack b{font-size:17px} .pack p{color:var(--mut);margin:6px 0 12px;font-size:14px;line-height:1.5}
   footer{color:var(--mut);font-size:13px;text-align:center;margin-top:24px;line-height:1.6}
 </style>
 </head>
@@ -60,54 +62,82 @@
   <header>
     <div class="logo">REDOX<span>RUSH</span></div>
     <div class="hud">
-      <div class="pill lvl" id="hudLvl">Уровень 1/4</div>
+      <div class="pill lvl" id="hudLvl">Выбор пака</div>
       <div class="pill hp" id="hudHp">❤ ❤ ❤</div>
       <div class="pill xp" id="hudXp">0 XP</div>
     </div>
   </header>
   <div class="bar"><i id="progress"></i></div>
   <div class="card" id="screen"></div>
-  <footer>Ионно-электронный баланс = метод полуреакций. Балансим O водой, H — H⁺/OH⁻, заряд — электронами. <br>Хостится одним файлом на GitHub Pages.</footer>
+  <footer>Ионно-электронный баланс = метод полуреакций. O — водой, H — H⁺/OH⁻, заряд — e⁻. <br>Пак 1: Mn + S · Пак 2: азотка + железо + медь.</footer>
 </div>
 
 <script>
 const LEVELS = ["Разведка: степени окисления","Полуреакции в кислой среде","Среда решает","Босс: собери уравнение"];
 
-const TASKS = [
-  // LVL 0 — quiz
+const PACK1 = [
   {lvl:0, type:'quiz', q:'Степень окисления Mn в MnO₄⁻?', opts:['+7','+4','+2','+6'], correct:0,
-   explain:'4 кислорода по -2 = -8. Весь ион -1, значит Mn = +7. Это максимальная, дальше только падать и жрать электроны.'},
+   explain:'4 кислорода по -2 = -8. Весь ион -1, значит Mn = +7. Максимум, дальше только падать.'},
   {lvl:0, type:'quiz', q:'Кто тут окислитель: MnO₄⁻ или SO₃²⁻?', opts:['MnO₄⁻ (забирает e⁻)','SO₃²⁻ (забирает e⁻)'], correct:0,
-   explain:'Mn +7 → +2 падает, значит забирает электроны = окислитель. S +4 → +6 растет = восстановитель, отдает.'},
+   explain:'Mn +7 → +2 падает = забирает e⁻ = окислитель. S +4 → +6 растет = отдает = восстановитель.'},
   {lvl:0, type:'quiz', q:'Окисление — это...', opts:['отдать e⁻, степень выросла','забрать e⁻, степень упала','отдать H₂O'], correct:0,
-   explain:'Отдал бабки-электроны — окислился. Забрал — восстановился. Путаешь — вся тема посыпется.'},
-  {lvl:0, type:'quiz', q:'Сера в SO₃²⁻ → SO₄²⁻. Сколько e⁻ отдает?', opts:['2','5','3','8'], correct:0,
-   explain:'+4 → +6, разница 2. Значит -2e⁻ в полуреакции окисления.'},
-
-  // LVL 1 — half builder
-  {lvl:1, type:'half', title:'MnO₄⁻ → Mn²⁺ (кислая среда)', prompt:'Уравняй: добавь H⁺, H₂O и e⁻. Порядок: сначала O водой, потом H водородом, потом заряд электронами.',
-   ans:{h:8,h2o:4,e:5}, explain:'O: 4 слева → 4H₂O справа. H: 8 справа → 8H⁺ слева. Заряд слева +7, справа +2 → +5e⁻ слева. Итог: MnO₄⁻ + 8H⁺ + 5e⁻ → Mn²⁺ + 4H₂O'},
-  {lvl:1, type:'half', title:'SO₃²⁻ → SO₄²⁻ (кислая среда)', prompt:'Сера уже сходится 1:1. Добавь воду, водород и электроны.',
-   ans:{h:0,h2o:1,e:2}, hint:'H⁺ будет справа, а не слева!',
-   explain:'O: 3→4, значит +1H₂O слева. H: 2H⁺ справа. Заряд слева -2, справа 0 → отдать 2e⁻. Итог: SO₃²⁻ + H₂O → SO₄²⁻ + 2H⁺ + 2e⁻. Внимание: H⁺ = 0 слева, вбивай 0 и 2 справа? В игре: H=2, но мы считаем H слева. Поэтому правильный ввод тут: H=0? Нет — смотри подсказку в коде.'},
+   explain:'Отдал электроны — окислился. Забрал — восстановился.'},
+  {lvl:0, type:'quiz', q:'Сера SO₃²⁻ → SO₄²⁻. Сколько e⁻ отдает?', opts:['2','5','3','8'], correct:0,
+   explain:'+4 → +6, разница 2. Значит отдать 2e⁻.'},
+  {lvl:1, type:'half', title:'MnO₄⁻ → Mn²⁺ (кислая среда)', prompt:'Уравняй: добавь H⁺, H₂O и e⁻. Порядок: O водой, потом H водородом, потом заряд электронами.',
+   ans:{h:8,h2o:4,e:5}, explain:'MnO₄⁻ + 8H⁺ + 5e⁻ → Mn²⁺ + 4H₂O. O добили 4H₂O, H добили 8H⁺, заряд выровняли 5e⁻.'},
+  {lvl:1, type:'half', hSide:'right', title:'SO₃²⁻ → SO₄²⁻ (кислая среда)', prompt:'Сера 1:1. Внимание: тут H⁺ получится СПРАВА. Вбей: сколько H⁺ справа, сколько H₂O слева, сколько e⁻.',
+   ans:{h:2,h2o:1,e:2}, explain:'SO₃²⁻ + H₂O → SO₄²⁻ + 2H⁺ + 2e⁻. O 3→4 = +1H₂O слева, справа 2H⁺, отдать 2e⁻.'},
   {lvl:1, type:'half', title:'Cr₂O₇²⁻ → 2Cr³⁺ (кислая среда)', prompt:'Дихромат — классика. Хром уже 2:2. Сколько H⁺ / H₂O / e⁻?',
-   ans:{h:14,h2o:7,e:6}, explain:'O 7 → 7H₂O справа. H 14H⁺ слева. Заряд слева +12, справа +6 → +6e⁻ слева.'},
-
-  // LVL 2 — среда
+   ans:{h:14,h2o:7,e:6}, explain:'Cr₂O₇²⁻ + 14H⁺ + 6e⁻ → 2Cr³⁺ + 7H₂O.'},
   {lvl:2, type:'quiz', q:'MnO₄⁻ + SO₃²⁻ в НЕЙТРАЛЬНОЙ среде. Во что упадет Mn?', opts:['MnO₂ (бурый осадок, +4)','Mn²⁺ (бесцветный)','MnO₄²⁻ (зеленый)'], correct:0,
-   explain:'Правило: кислота жрет до +2, нейтраль до +4 (MnO₂), щелочь до +6. Среда определяет глубину.'},
+   explain:'Кислота жрет до +2, нейтраль до +4 (MnO₂), щелочь до +6.'},
   {lvl:2, type:'quiz', q:'В щелочной среде чем балансим H и O?', opts:['H₂O и OH⁻, никаких H⁺','только H⁺','на глазок'], correct:0,
-   explain:'В щелочи H⁺ запрещен — он тут же станет водой. Работаем парой H₂O / OH⁻. Лайфхак: сбалансируй как в кислой, потом к каждому H⁺ добавь OH⁻ с двух сторон.'},
-  {lvl:2, type:'half', title:'MnO₄⁻ → MnO₂ (нейтральная среда)', prompt:'Баланс через H₂O / OH⁻. Введи: H₂O слева, OH⁻ справа, e⁻.',
-   ans:{h2o:2,oh:4,e:3}, mode:'neutral', explain:'MnO₄⁻ + 2H₂O + 3e⁻ → MnO₂ + 4OH⁻. Заряд слева -4, справа -4. Сошлось.'},
-
-  // LVL 3 — босс
-  {lvl:3, type:'full', title:'БОСС: собери полное ионное уравнение', prompt:'_MnO₄⁻ + _SO₃²⁻ + _H⁺ → _Mn²⁺ + _SO₄²⁻ + _H₂O. Вбей 6 коэффициентов по порядку.',
-   ans:[2,5,6,2,5,3], explain:'НОК электронов 5 и 2 = 10. Первую полуреакцию x2, вторую x5, сложить и сократить воду/водород. Проверка зарядом: слева -6, справа -6.'},
-  {lvl:3, type:'full', title:'ФИНАЛ: дихромат жрет железо', prompt:'_Cr₂O₇²⁻ + _Fe²⁺ + _H⁺ → _Cr³⁺ + _Fe³⁺ + _H₂O',
-   ans:[1,6,14,2,6,7], explain:'Cr берет 6e⁻, Fe отдает 1e⁻. Значит Fe x6. Дальше вода и водород: 7H₂O и 14H⁺.'},
+   explain:'В щелочи H⁺ запрещен. Работаем парой H₂O / OH⁻.'},
+  {lvl:2, type:'half', title:'MnO₄⁻ → MnO₂ (нейтральная среда)', prompt:'Баланс через H₂O / OH⁻. Введи: H₂O слева, OH⁻ справа, e⁻.', mode:'neutral',
+   ans:{h2o:2,oh:4,e:3}, explain:'MnO₄⁻ + 2H₂O + 3e⁻ → MnO₂ + 4OH⁻.'},
+  {lvl:3, type:'full', title:'БОСС: MnO₄⁻ жрет сульфит', prompt:'Вбей 6 коэффициентов по порядку.', labels:['MnO₄⁻','SO₃²⁻','H⁺','Mn²⁺','SO₄²⁻','H₂O'],
+   ans:[2,5,6,2,5,3], explain:'НОК 5 и 2 = 10. Первую x2, вторую x5, сложить и сократить. Проверка зарядом: -6 = -6.'},
+  {lvl:3, type:'full', title:'ФИНАЛ: дихромат жрет железо', prompt:'Вбей 6 коэффициентов по порядку.', labels:['Cr₂O₇²⁻','Fe²⁺','H⁺','Cr³⁺','Fe³⁺','H₂O'],
+   ans:[1,6,14,2,6,7], explain:'Cr берет 6e⁻, Fe отдает 1e⁻. Значит Fe x6. Дальше 7H₂O и 14H⁺.'},
 ];
 
+const PACK2 = [
+  {lvl:0, type:'quiz', q:'Степень окисления Cr в Cr₂O₇²⁻?', opts:['+6','+7','+3','+4'], correct:0,
+   explain:'7 O = -14, ион -2. Значит 2Cr = +12, один Cr = +6.'},
+  {lvl:0, type:'quiz', q:'Медь + КОНЦЕНТРИРОВАННАЯ HNO₃. Что выделится?', opts:['NO₂ (бурый газ)','NO (бесцветный)','NH₄⁺ (в раствор)','H₂ (водород)'], correct:0,
+   explain:'Конц. азотка восстанавливается неглубоко: +5 → +4 (NO₂). Разбавленная с медью даст NO (+5→+2), а с цинком очень разбавленная — NH₄⁺ (+5→-3). Чем активнее металл и жиже кислота — тем глубже падение.'},
+  {lvl:0, type:'quiz', q:'Fe²⁺ → Fe³⁺. Сколько e⁻?', opts:['отдает 1','забирает 1','отдает 2','забирает 5'], correct:0,
+   explain:'+2 → +3, вырос на 1 = отдал 1e⁻. Самый простой восстановитель.'},
+  {lvl:0, type:'quiz', q:'N: NO₃⁻ (+5) → NO (+2). Сколько e⁻ берет?', opts:['3','1','5','8'], correct:0,
+   explain:'+5 → +2, разница 3. Берет 3e⁻. Это разбавленная азотка.'},
+  {lvl:1, type:'half', title:'NO₃⁻ → NO (разб. HNO₃)', prompt:'Классика: медь в разбавленной азотке. Сколько H⁺ (слева) / H₂O (справа) / e⁻?',
+   ans:{h:4,h2o:2,e:3}, explain:'NO₃⁻ + 4H⁺ + 3e⁻ → NO + 2H₂O. O 3→1: не хватает 2 O справа? Нет: слева 3 O, справа 1 в NO + 2 в воде = 3. Сошлось.'},
+  {lvl:1, type:'half', title:'NO₃⁻ → NO₂ (конц. HNO₃)', prompt:'Концентрированная азотка. Падение неглубокое, всего 1 электрон. Сколько H⁺ / H₂O?',
+   ans:{h:2,h2o:1,e:1}, explain:'NO₃⁻ + 2H⁺ + 1e⁻ → NO₂ + H₂O.'},
+  {lvl:1, type:'half', hSide:'right', title:'NO₂⁻ → NO₃⁻ (окисление)', prompt:'Нитрит окисляется в нитрат. Тут H⁺ будет СПРАВА. Вбей H⁺ справа / H₂O слева / e⁻.',
+   ans:{h:2,h2o:1,e:2}, explain:'NO₂⁻ + H₂O → NO₃⁻ + 2H⁺ + 2e⁻. N +3→+5 отдал 2e⁻.'},
+  {lvl:1, type:'half', title:'Fe²⁺ → Fe³⁺', prompt:'Халява. Ни O ни H нет. Сколько e⁻? Остальное нули.',
+   ans:{h:0,h2o:0,e:1}, explain:'Fe²⁺ → Fe³⁺ + 1e⁻. Вбивай H=0, H₂O=0, e=1.'},
+  {lvl:2, type:'quiz', q:'Zn + ОЧЕНЬ разбавленная HNO₃. Продукт восстановления?', opts:['NH₄⁺ (+5 → -3, 8e⁻)','NO₂','NO','N₂O'], correct:0,
+   explain:'Активный металл + жижа = глубокое падение до -3. 8 электронов — самый жесткий случай, его любят на экзаменах.'},
+  {lvl:2, type:'quiz', q:'H₂O₂ в реакции с MnO₄⁻ в кислой среде — кто?', opts:['восстановитель (O -1 → 0, отдает e⁻)','окислитель','зритель'], correct:0,
+   explain:'H₂O₂ → O₂: O -1 → 0, отдает 2e⁻. Пероксид тут восстановитель, а марганец как обычно жрет.'},
+  {lvl:3, type:'full', title:'БОСС: марганцовка жрет железо', prompt:'Классика титрования. Вбей коэффициенты.', labels:['MnO₄⁻','Fe²⁺','H⁺','Mn²⁺','Fe³⁺','H₂O'],
+   ans:[1,5,8,1,5,4], explain:'Mn берет 5e⁻, Fe отдает 1e⁻. Значит Fe x5. Итог: MnO₄⁻ + 5Fe²⁺ + 8H⁺ → Mn²⁺ + 5Fe³⁺ + 4H₂O.'},
+  {lvl:3, type:'full', title:'БОСС: дихромат жрет сульфит', prompt:'Похож на пак 1, но цифры другие. Вбей.', labels:['Cr₂O₇²⁻','SO₃²⁻','H⁺','Cr³⁺','SO₄²⁻','H₂O'],
+   ans:[1,3,8,2,3,4], explain:'Cr берет 6e⁻, S отдает 2e⁻. НОК 6. Вторую x3. Итог: Cr₂O₇²⁻ + 3SO₃²⁻ + 8H⁺ → 2Cr³⁺ + 3SO₄²⁻ + 4H₂O.'},
+  {lvl:3, type:'full', title:'ФИНАЛ: медь + конц. азотка', prompt:'Cu + NO₃⁻ + H⁺ → Cu²⁺ + NO₂ + H₂O. Медь отдает 2e⁻, азот берет 1e⁻.', labels:['Cu','NO₃⁻','H⁺','Cu²⁺','NO₂','H₂O'],
+   ans:[1,2,4,1,2,2], explain:'Cu → Cu²⁺ + 2e⁻, NO₃⁻ + 2H⁺ + 1e⁻ → NO₂ + H₂O (x2). Складываем: Cu + 2NO₃⁻ + 4H⁺ → Cu²⁺ + 2NO₂ + 2H₂O.'},
+];
+
+const PACKS = [
+  {name:'Пак 1 · Mn + S + Cr', desc:'MnO₄⁻, SO₃²⁻, дихромат + железо. База, которую ты уже прошел.', tasks:PACK1},
+  {name:'Пак 2 · Азотка + Fe + Cu', desc:'НОВОЕ: NO₃⁻→NO / NO₂ / NH₄⁺, нитрит, медь в азотке, Mn+Fe, Cr+сульфит. Те же механики, другие цифры.', tasks:PACK2},
+];
+
+let TASKS = PACKS[0].tasks;
+let packIdx = 0;
 let s = {task:0, hp:3, xp:0};
 const screen = document.getElementById('screen');
 const elHp = document.getElementById('hudHp'), elXp = document.getElementById('hudXp'),
@@ -117,10 +147,10 @@ function hud(){
   elHp.textContent = '❤ '.repeat(s.hp).trim() || '☠';
   elXp.textContent = s.xp + ' XP';
   const t = TASKS[s.task];
-  elLvl.textContent = t ? `Уровень ${t.lvl+1}/4 · ${LEVELS[t.lvl]}` : 'Финал';
+  elLvl.textContent = t ? `${PACKS[packIdx].name.split('·')[0].trim()} · Ур.${t.lvl+1}/4` : 'Финал';
   elBar.style.width = Math.round(s.task / TASKS.length * 100) + '%';
 }
-function fbOk(msg){ return `<div class="fb ok"><b>✅ Верно. +100 XP</b>${msg}</div>`; }
+function fbOk(msg){ return `<div class="fb ok"><b>✅ Верно</b>${msg}</div>`; }
 function fbBad(msg){ return `<div class="fb bad"><b>❌ Минус жизнь. Разбор:</b>${msg}</div>`; }
 
 function render(){
@@ -135,21 +165,18 @@ function render(){
 
 function renderStart(){
   elBar.style.width='0%';
+  elLvl.textContent='Выбор пака';
   screen.innerHTML = `
-    <div class="tag lime">мини-курс · игра · 10 заданий</div>
-    <h1>Ионно-электронный баланс за 15 минут</h1>
-    <p class="sub">Качаешь полуреакции как скилл: сначала степени окисления, потом собираешь <span class="kbd">MnO₄⁻ → Mn²⁺</span> руками, потом побеждаешь босса <span class="kbd">Cr₂O₇²⁻ + Fe²⁺</span>. 3 жизни. Ошибся — получаешь разбор, а не «подумай еще».</p>
-    <div class="row2">
-      <div class="pill">⚡ 4 уровня: разведка → полуреакции → среда → босс</div>
-      <div class="pill">🧪 Правило: O — водой, H — H⁺/OH⁻, заряд — e⁻</div>
-    </div>
-    <button class="btn" onclick="start()">▶ НАЧАТЬ ЗАМЕС</button>
-    <button class="btn ghost" onclick="cheat()">📖 Сначала шпаргалка (30 сек)</button>`;
+    <div class="tag lime">2 пака · ~25 заданий</div>
+    <h1>Redox Rush: выбери пак</h1>
+    <p class="sub">Механика везде одна: O — водой, H — H⁺/OH⁻, заряд — e⁻. Меняются только реакции. Пак 1 ты уже вынес — теперь попробуй пак 2 с азоткой.</p>
+    ${PACKS.map((p,i)=>`<div class="pack"><b>${i+1}. ${p.name}</b><p>${p.desc} · заданий: ${p.tasks.length}</p><button class="btn ${i===1?'cyan':''}" onclick="start(${i})">▶ ИГРАТЬ ПАК ${i+1}</button></div>`).join('')}
+    <button class="btn ghost" onclick="cheat()">📖 Шпаргалка (30 сек)</button>`;
 }
 
 function renderQuiz(t){
   screen.innerHTML = `
-    <div class="tag cyan">Уровень ${t.lvl+1} · ${LEVELS[t.lvl]}</div>
+    <div class="tag cyan">Ур.${t.lvl+1} · ${LEVELS[t.lvl]} · ${s.task+1}/${TASKS.length}</div>
     <h2>${t.q}</h2>
     <div class="opts">${t.opts.map((o,i)=>`<button class="opt" onclick="answerQuiz(${i})">${o}</button>`).join('')}</div>
     <div id="fb"></div>`;
@@ -157,50 +184,48 @@ function renderQuiz(t){
 
 function renderHalf(t){
   const neutral = t.mode==='neutral';
+  const hLabel = neutral ? 'H₂O слева' : (t.hSide==='right' ? 'H⁺ (справа!)' : 'H⁺ (слева)');
+  const wLabel = neutral ? 'OH⁻ справа' : (t.hSide==='right' ? 'H₂O (слева)' : 'H₂O (справа)');
   screen.innerHTML = `
-    <div class="tag cyan">Уровень ${t.lvl+1} · ${LEVELS[t.lvl]}</div>
+    <div class="tag cyan">Ур.${t.lvl+1} · ${LEVELS[t.lvl]} · ${s.task+1}/${TASKS.length}</div>
     <h2>${t.title}</h2>
     <p class="sub">${t.prompt}</p>
     <div class="eq">${t.title}</div>
     <div class="grid3">
-      ${neutral ? `
-        <label class="mini"><span>H₂O слева</span><input id="inA" type="number" min="0" max="20" value="0"></label>
-        <label class="mini"><span>OH⁻ справа</span><input id="inB" type="number" min="0" max="20" value="0"></label>
-        <label class="mini"><span>e⁻ (штук)</span><input id="inC" type="number" min="0" max="20" value="0"></label>`
-      : `
-        <label class="mini"><span>H⁺</span><input id="inA" type="number" min="0" max="20" value="0"></label>
-        <label class="mini"><span>H₂O</span><input id="inB" type="number" min="0" max="20" value="0"></label>
-        <label class="mini"><span>e⁻ (штук)</span><input id="inC" type="number" min="0" max="20" value="0"></label>`}
+      <label class="mini"><span>${hLabel}</span><input id="inA" type="number" min="0" max="20" value="0"></label>
+      <label class="mini"><span>${wLabel}</span><input id="inB" type="number" min="0" max="20" value="0"></label>
+      <label class="mini"><span>e⁻ (штук)</span><input id="inC" type="number" min="0" max="20" value="0"></label>
     </div>
     <button class="btn cyan" onclick="answerHalf()">ПРОВЕРИТЬ ПОЛУРЕАКЦИЮ</button>
     <div id="fb"></div>`;
 }
 
 function renderFull(t){
+  const L = t.labels || ['A','B','C','D','E','F'];
   screen.innerHTML = `
-    <div class="tag">Уровень ${t.lvl+1} · ${LEVELS[t.lvl]}</div>
+    <div class="tag">Ур.${t.lvl+1} · ${LEVELS[t.lvl]} · ${s.task+1}/${TASKS.length}</div>
     <h2>${t.title}</h2>
     <p class="sub">${t.prompt}</p>
     <div class="eq"><div class="coef-row">
-      <input id="c0" type="number" min="1" max="14" value="1"> ${t.title.includes('дихромат')||t.prompt.includes('Cr')?'Cr₂O₇²⁻':'MnO₄⁻'} +
-      <input id="c1" type="number" min="1" max="14" value="1"> ${t.prompt.includes('Fe')?'Fe²⁺':'SO₃²⁻'} +
-      <input id="c2" type="number" min="1" max="14" value="1"> H⁺ →<br>
-      <input id="c3" type="number" min="1" max="14" value="1"> ${t.prompt.includes('Fe')?'Cr³⁺':'Mn²⁺'} +
-      <input id="c4" type="number" min="1" max="14" value="1"> ${t.prompt.includes('Fe')?'Fe³⁺':'SO₄²⁻'} +
-      <input id="c5" type="number" min="1" max="14" value="1"> H₂O
+      <input id="c0" type="number" min="1" max="14" value="1"> ${L[0]} +
+      <input id="c1" type="number" min="1" max="14" value="1"> ${L[1]} +
+      <input id="c2" type="number" min="1" max="14" value="1"> ${L[2]} →<br>
+      <input id="c3" type="number" min="1" max="14" value="1"> ${L[3]} +
+      <input id="c4" type="number" min="1" max="14" value="1"> ${L[4]} +
+      <input id="c5" type="number" min="1" max="14" value="1"> ${L[5]}
     </div></div>
     <button class="btn" onclick="answerFull()">СОБРАТЬ УРАВНЕНИЕ</button>
     <div id="fb"></div>`;
 }
 
-window.start = ()=>{ s={task:0,hp:3,xp:0}; render(); };
+window.start = (i)=>{ packIdx = (typeof i==='number'?i:0); TASKS = PACKS[packIdx].tasks; s={task:0,hp:3,xp:0}; render(); };
 window.cheat = ()=>{
   screen.innerHTML = `
     <div class="tag lime">шпаргалка</div>
-    <h2>3 правила — tatuируй</h2>
-    <p class="sub">1. <b>O балансим H₂O.</b> 2. <b>H балансим:</b> кислота — H⁺, щелочь — H₂O/OH⁻. 3. <b>Заряд балансим e⁻.</b> Потом НОК электронов, складываем, сокращаем. Среда решает продукт: MnO₄⁻ в кислоте → Mn²⁺, в нейтрали → MnO₂, в щелочи → MnO₄²⁻.</p>
-    <div class="eq">MnO₄⁻ + 8H⁺ + 5e⁻ → Mn²⁺ + 4H₂O</div>
-    <button class="btn" onclick="start()">ПОНЯЛ, В БОЙ</button>`;
+    <h2>3 правила</h2>
+    <p class="sub">1. <b>O балансим H₂O.</b> 2. <b>H:</b> кислота — H⁺, щелочь — H₂O/OH⁻. 3. <b>Заряд — e⁻.</b> Потом НОК электронов, складываем. Азотка: конц + Cu → NO₂, разб + Cu → NO, очень разб + Zn → NH₄⁺.</p>
+    <div class="eq">NO₃⁻ + 4H⁺ + 3e⁻ → NO + 2H₂O</div>
+    <button class="btn" onclick="renderStart()">НАЗАД К ПАКАМ</button>`;
 };
 
 window.answerQuiz = (i)=>{
@@ -209,37 +234,20 @@ window.answerQuiz = (i)=>{
   const btns = [...document.querySelectorAll('.opt')];
   if(i===t.correct){ s.xp+=100; box.innerHTML = fbOk(t.explain) + `<button class="btn" onclick="next()">ДАЛЬШЕ →</button>`; btns[i].classList.add('ok'); }
   else { s.hp--; btns[i].classList.add('fail'); btns[t.correct].classList.add('ok');
-    box.innerHTML = fbBad(t.explain) + `<button class="btn ghost" onclick="next()">ДАЛЬШЕ (${s.hp} ❤ осталось)</button>`; }
+    box.innerHTML = fbBad(t.explain) + `<button class="btn ghost" onclick="next()">ДАЛЬШЕ (${s.hp} ❤)</button>`; }
   hud();
   btns.forEach(b=>b.disabled=true);
 };
 
-// фикс для задания SO3: там H справа, но для простоты игры спрашиваем H₂O и e, а H считаем справа
 window.answerHalf = ()=>{
   const t = TASKS[s.task];
   const box = document.getElementById('fb');
   const a=+document.getElementById('inA').value, b=+document.getElementById('inB').value, c=+document.getElementById('inC').value;
   let ok=false;
-  if(t.title.includes('SO₃')){
-    // SO3 + H2O -> SO4 + 2H+ : H2O=1, e=2, а поле H трактуем как H+ справа =2
-    ok = (a===2 && b===1 && c===2);
-  } else if(t.mode==='neutral'){
-    ok = (a===t.ans.h2o && b===t.ans.oh && c===t.ans.e);
-  } else {
-    ok = (a===t.ans.h && b===t.ans.h2o && c===t.ans.e);
-  }
-  // подмена подписей для SO3 чтобы не путать
-  if(t.title.includes('SO₃') && !document.getElementById('soFixed')){
-    // ничего, объяснение ниже закроет
-  }
-  if(ok){ s.xp+=150; box.innerHTML = fbOk(t.explain.replace('H⁺ = 0 слева','H⁺ справа')) + `<button class="btn" onclick="next()">ДАЛЬШЕ →</button>`; }
-  else {
-    s.hp--;
-    let hint = t.title.includes('SO₃')
-      ? 'Подсказка: O 3→4, значит 1 H₂O <b>слева</b>. Тогда справа вылезут 2H⁺. Электронов 2. Вбивать: H⁺=2, H₂O=1, e⁻=2. Да, тут H⁺ справа — это и есть прикол окисления.'
-      : t.explain;
-    box.innerHTML = fbBad(hint) + `<button class="btn ghost" onclick="next()">ДАЛЬШЕ (${s.hp} ❤)</button>`;
-  }
+  if(t.mode==='neutral'){ ok = (a===t.ans.h2o && b===t.ans.oh && c===t.ans.e); }
+  else { ok = (a===t.ans.h && b===t.ans.h2o && c===t.ans.e); }
+  if(ok){ s.xp+=150; box.innerHTML = fbOk(t.explain) + `<button class="btn" onclick="next()">ДАЛЬШЕ →</button>`; }
+  else { s.hp--; box.innerHTML = fbBad(t.explain) + `<button class="btn ghost" onclick="next()">ДАЛЬШЕ (${s.hp} ❤)</button>`; }
   hud();
 };
 
@@ -249,7 +257,7 @@ window.answerFull = ()=>{
   const box = document.getElementById('fb');
   const ok = v.every((x,i)=>x===t.ans[i]);
   if(ok){ s.xp+=200; box.innerHTML = fbOk(t.explain) + `<button class="btn" onclick="next()">ДАЛЬШЕ →</button>`; }
-  else { s.hp--; box.innerHTML = fbBad(t.explain + `<br>Ты вбил: ${v.join('-')}, а надо: ${t.ans.join('-')}. Проверяй НОК электронов и заряды.`) + `<button class="btn ghost" onclick="next()">ДАЛЬШЕ (${s.hp} ❤)</button>`; }
+  else { s.hp--; box.innerHTML = fbBad(t.explain + `<br>Ты вбил: ${v.join('-')}, надо: ${t.ans.join('-')}.`) + `<button class="btn ghost" onclick="next()">ДАЛЬШЕ (${s.hp} ❤)</button>`; }
   hud();
 };
 
@@ -257,29 +265,19 @@ window.next = ()=>{ s.task++; render(); };
 
 function gameOver(){
   elBar.style.width = Math.round(s.task/TASKS.length*100)+'%';
-  screen.innerHTML = `<div class="tag">поражение</div><h1>Жизни кончились. Бывает.</h1>
-  <p class="sub">Ты набрал ${s.xp} XP и дошел до задания ${s.task+1}/${TASKS.length}. Разбор ошибок — уже в голове. Реванш?</p>
-  <button class="btn" onclick="start()">↻ ЕЩЕ РАЗ</button>`;
+  screen.innerHTML = `<div class="tag">поражение · ${PACKS[packIdx].name}</div><h1>Жизни кончились</h1>
+  <p class="sub">${s.xp} XP, дошел до ${s.task+1}/${TASKS.length}.</p>
+  <div class="row2"><button class="btn" onclick="start(${packIdx})">↻ РЕВАНШ</button>
+  <button class="btn ghost" onclick="renderStart()">К ПАКАМ</button></div>`;
 }
 function win(){
   elBar.style.width='100%'; hud();
-  const rank = s.xp>=1400 ? 'Легенда Redox' : s.xp>=1000 ? 'Мастер полуреакций' : 'Крепкий боец';
-  screen.innerHTML = `<div class="tag lime">${rank} · ${s.xp} XP</div><h1>Ты разобрал ионно-электронный баланс 👊</h1>
-  <p class="sub">Теперь ты умеешь: находить окислитель, балансить O водой, H — H⁺/OH⁻, заряд — электронами, собирать полное уравнение и учитывать среду. Осталось закрепить на своих реакциях из учебника.</p>
-  <div class="eq">2MnO₄⁻ + 5SO₃²⁻ + 6H⁺ → 2Mn²⁺ + 5SO₄²⁻ + 3H₂O</div>
-  <div class="row2"><button class="btn" onclick="start()">СЫГРАТЬ ЕЩЕ</button>
-  <button class="btn ghost" onclick="renderStart()">НА ГЛАВНУЮ</button></div>`;
+  const other = packIdx===0?1:0;
+  screen.innerHTML = `<div class="tag lime">${PACKS[packIdx].name} пройден · ${s.xp} XP</div><h1>Пак вынесен 👊</h1>
+  <p class="sub">Ты закрыл все ${TASKS.length} заданий. Теперь добей второй пак — там другие цифры и азотка.</p>
+  <div class="row2"><button class="btn cyan" onclick="start(${other})">▶ ИГРАТЬ ${PACKS[other].name.toUpperCase()}</button>
+  <button class="btn ghost" onclick="renderStart()">К ПАКАМ</button></div>`;
 }
-
-// спец-обработка подписей для SO3 при рендере: переименовать H в H+ справа
-const _renderHalf = renderHalf;
-renderHalf = function(t){
-  _renderHalf(t);
-  if(t.title.includes('SO₃')){
-    const l = document.querySelectorAll('label.mini span');
-    if(l[0]) l[0].textContent = 'H⁺ (справа)';
-  }
-};
 
 renderStart();
 </script>
