@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Redox Rush — ионно-электронный баланс</title>
+<style>
+  :root{
+    --bg:#0b1020; --panel:#141b33; --panel2:#1b2442; --line:#2a3560;
+    --txt:#e8ecff; --mut:#9aa5cc; --acc:#a3e635; --acc2:#22d3ee; --bad:#fb7185; --gold:#facc15;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:radial-gradient(1200px 600px at 50% -10%,#1e2a5a 0%,var(--bg) 60%);color:var(--txt);font-family:Inter,Segoe UI,system-ui,Arial,sans-serif;min-height:100vh}
+  .wrap{max-width:860px;margin:0 auto;padding:24px 16px 64px}
+  header{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:16px}
+  .logo{font-weight:900;font-size:22px;letter-spacing:.5px}
+  .logo span{color:var(--acc)}
+  .hud{display:flex;gap:8px;flex-wrap:wrap}
+  .pill{background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:8px 14px;font-weight:700;font-size:14px}
+  .pill.hp{color:var(--bad)} .pill.xp{color:var(--acc)} .pill.lvl{color:var(--acc2)}
+  .bar{height:10px;background:#0a0e1f;border:1px solid var(--line);border-radius:999px;overflow:hidden;margin:12px 0 20px}
+  .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--acc2),var(--acc));transition:width .4s}
+  .card{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:20px;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,.45)}
+  h1{font-size:32px;margin:0 0 8px;line-height:1.1}
+  h2{font-size:22px;margin:0 0 8px}
+  p.sub{color:var(--mut);margin:0 0 20px;line-height:1.6}
+  .btn{appearance:none;border:0;border-radius:14px;padding:14px 20px;font-weight:800;font-size:16px;cursor:pointer;background:var(--acc);color:#0b1020;transition:transform .08s,filter .15s;width:100%;margin-top:10px}
+  .btn:hover{filter:brightness(1.08)} .btn:active{transform:scale(.98)}
+  .btn.ghost{background:transparent;color:var(--txt);border:1px solid var(--line)}
+  .btn.cyan{background:var(--acc2)}
+  .opts{display:grid;gap:10px;margin-top:16px}
+  .opt{text-align:left;background:#0e1530;border:1px solid var(--line);color:var(--txt);border-radius:14px;padding:14px 16px;font-size:16px;font-weight:600;cursor:pointer;transition:.15s}
+  .opt:hover{border-color:var(--acc2);background:#131c3d}
+  .opt.ok{border-color:var(--acc);background:rgba(163,230,53,.12)}
+  .opt.fail{border-color:var(--bad);background:rgba(251,113,133,.12);animation:shake .3s}
+  @keyframes shake{25%{transform:translateX(-5px)}50%{transform:translateX(5px)}75%{transform:translateX(-3px)}}
+  .eq{background:#070b1d;border:1px dashed var(--line);border-radius:14px;padding:16px;font-family:Consolas,monospace;font-size:18px;text-align:center;margin:14px 0;line-height:2}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+  @media(max-width:560px){.grid3{grid-template-columns:1fr} h1{font-size:26px}}
+  label.mini{display:block;background:#070b1d;border:1px solid var(--line);border-radius:14px;padding:12px}
+  label.mini span{display:block;font-size:12px;color:var(--mut);font-weight:800;letter-spacing:.6px;text-transform:uppercase;margin-bottom:8px}
+  label.mini input{width:100%;background:#0e1530;border:1px solid var(--line);color:var(--txt);border-radius:10px;padding:12px;font-size:20px;font-weight:800;text-align:center;outline:none}
+  label.mini input:focus{border-color:var(--acc2)}
+  .coef-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:center;font-family:Consolas,monospace;font-size:17px}
+  .coef-row input{width:56px;background:#0e1530;border:1px solid var(--line);color:var(--gold);border-radius:10px;padding:8px;font-size:18px;font-weight:900;text-align:center}
+  .fb{margin-top:16px;border-radius:14px;padding:14px 16px;font-size:15px;line-height:1.55;display:none}
+  .fb.ok{display:block;background:rgba(163,230,53,.12);border:1px solid var(--acc)}
+  .fb.bad{display:block;background:rgba(251,113,133,.12);border:1px solid var(--bad)}
+  .fb b{display:block;margin-bottom:4px}
+  .tag{display:inline-block;font-size:12px;font-weight:900;letter-spacing:1px;text-transform:uppercase;color:#0b1020;background:var(--gold);border-radius:999px;padding:4px 10px;margin-bottom:10px}
+  .tag.cyan{background:var(--acc2)} .tag.lime{background:var(--acc)}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  @media(max-width:560px){.row2{grid-template-columns:1fr}}
+  .kbd{font-family:monospace;background:#070b1d;border:1px solid var(--line);border-radius:8px;padding:2px 8px}
+  footer{color:var(--mut);font-size:13px;text-align:center;margin-top:24px;line-height:1.6}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo">REDOX<span>RUSH</span></div>
+    <div class="hud">
+      <div class="pill lvl" id="hudLvl">Уровень 1/4</div>
+      <div class="pill hp" id="hudHp">❤ ❤ ❤</div>
+      <div class="pill xp" id="hudXp">0 XP</div>
+    </div>
+  </header>
+  <div class="bar"><i id="progress"></i></div>
+  <div class="card" id="screen"></div>
+  <footer>Ионно-электронный баланс = метод полуреакций. Балансим O водой, H — H⁺/OH⁻, заряд — электронами. <br>Хостится одним файлом на GitHub Pages.</footer>
+</div>
+
+<script>
+const LEVELS = ["Разведка: степени окисления","Полуреакции в кислой среде","Среда решает","Босс: собери уравнение"];
+
+const TASKS = [
+  // LVL 0 — quiz
+  {lvl:0, type:'quiz', q:'Степень окисления Mn в MnO₄⁻?', opts:['+7','+4','+2','+6'], correct:0,
+   explain:'4 кислорода по -2 = -8. Весь ион -1, значит Mn = +7. Это максимальная, дальше только падать и жрать электроны.'},
+  {lvl:0, type:'quiz', q:'Кто тут окислитель: MnO₄⁻ или SO₃²⁻?', opts:['MnO₄⁻ (забирает e⁻)','SO₃²⁻ (забирает e⁻)'], correct:0,
+   explain:'Mn +7 → +2 падает, значит забирает электроны = окислитель. S +4 → +6 растет = восстановитель, отдает.'},
+  {lvl:0, type:'quiz', q:'Окисление — это...', opts:['отдать e⁻, степень выросла','забрать e⁻, степень упала','отдать H₂O'], correct:0,
+   explain:'Отдал бабки-электроны — окислился. Забрал — восстановился. Путаешь — вся тема посыпется.'},
+  {lvl:0, type:'quiz', q:'Сера в SO₃²⁻ → SO₄²⁻. Сколько e⁻ отдает?', opts:['2','5','3','8'], correct:0,
+   explain:'+4 → +6, разница 2. Значит -2e⁻ в полуреакции окисления.'},
+
+  // LVL 1 — half builder
+  {lvl:1, type:'half', title:'MnO₄⁻ → Mn²⁺ (кислая среда)', prompt:'Уравняй: добавь H⁺, H₂O и e⁻. Порядок: сначала O водой, потом H водородом, потом заряд электронами.',
+   ans:{h:8,h2o:4,e:5}, explain:'O: 4 слева → 4H₂O справа. H: 8 справа → 8H⁺ слева. Заряд слева +7, справа +2 → +5e⁻ слева. Итог: MnO₄⁻ + 8H⁺ + 5e⁻ → Mn²⁺ + 4H₂O'},
+  {lvl:1, type:'half', title:'SO₃²⁻ → SO₄²⁻ (кислая среда)', prompt:'Сера уже сходится 1:1. Добавь воду, водород и электроны.',
+   ans:{h:0,h2o:1,e:2}, hint:'H⁺ будет справа, а не слева!',
+   explain:'O: 3→4, значит +1H₂O слева. H: 2H⁺ справа. Заряд слева -2, справа 0 → отдать 2e⁻. Итог: SO₃²⁻ + H₂O → SO₄²⁻ + 2H⁺ + 2e⁻. Внимание: H⁺ = 0 слева, вбивай 0 и 2 справа? В игре: H=2, но мы считаем H слева. Поэтому правильный ввод тут: H=0? Нет — смотри подсказку в коде.'},
+  {lvl:1, type:'half', title:'Cr₂O₇²⁻ → 2Cr³⁺ (кислая среда)', prompt:'Дихромат — классика. Хром уже 2:2. Сколько H⁺ / H₂O / e⁻?',
+   ans:{h:14,h2o:7,e:6}, explain:'O 7 → 7H₂O справа. H 14H⁺ слева. Заряд слева +12, справа +6 → +6e⁻ слева.'},
+
+  // LVL 2 — среда
+  {lvl:2, type:'quiz', q:'MnO₄⁻ + SO₃²⁻ в НЕЙТРАЛЬНОЙ среде. Во что упадет Mn?', opts:['MnO₂ (бурый осадок, +4)','Mn²⁺ (бесцветный)','MnO₄²⁻ (зеленый)'], correct:0,
+   explain:'Правило: кислота жрет до +2, нейтраль до +4 (MnO₂), щелочь до +6. Среда определяет глубину.'},
+  {lvl:2, type:'quiz', q:'В щелочной среде чем балансим H и O?', opts:['H₂O и OH⁻, никаких H⁺','только H⁺','на глазок'], correct:0,
+   explain:'В щелочи H⁺ запрещен — он тут же станет водой. Работаем парой H₂O / OH⁻. Лайфхак: сбалансируй как в кислой, потом к каждому H⁺ добавь OH⁻ с двух сторон.'},
+  {lvl:2, type:'half', title:'MnO₄⁻ → MnO₂ (нейтральная среда)', prompt:'Баланс через H₂O / OH⁻. Введи: H₂O слева, OH⁻ справа, e⁻.',
+   ans:{h2o:2,oh:4,e:3}, mode:'neutral', explain:'MnO₄⁻ + 2H₂O + 3e⁻ → MnO₂ + 4OH⁻. Заряд слева -4, справа -4. Сошлось.'},
+
+  // LVL 3 — босс
+  {lvl:3, type:'full', title:'БОСС: собери полное ионное уравнение', prompt:'_MnO₄⁻ + _SO₃²⁻ + _H⁺ → _Mn²⁺ + _SO₄²⁻ + _H₂O. Вбей 6 коэффициентов по порядку.',
+   ans:[2,5,6,2,5,3], explain:'НОК электронов 5 и 2 = 10. Первую полуреакцию x2, вторую x5, сложить и сократить воду/водород. Проверка зарядом: слева -6, справа -6.'},
+  {lvl:3, type:'full', title:'ФИНАЛ: дихромат жрет железо', prompt:'_Cr₂O₇²⁻ + _Fe²⁺ + _H⁺ → _Cr³⁺ + _Fe³⁺ + _H₂O',
+   ans:[1,6,14,2,6,7], explain:'Cr берет 6e⁻, Fe отдает 1e⁻. Значит Fe x6. Дальше вода и водород: 7H₂O и 14H⁺.'},
+];
+
+let s = {task:0, hp:3, xp:0};
+const screen = document.getElementById('screen');
+const elHp = document.getElementById('hudHp'), elXp = document.getElementById('hudXp'),
+      elLvl = document.getElementById('hudLvl'), elBar = document.getElementById('progress');
+
+function hud(){
+  elHp.textContent = '❤ '.repeat(s.hp).trim() || '☠';
+  elXp.textContent = s.xp + ' XP';
+  const t = TASKS[s.task];
+  elLvl.textContent = t ? `Уровень ${t.lvl+1}/4 · ${LEVELS[t.lvl]}` : 'Финал';
+  elBar.style.width = Math.round(s.task / TASKS.length * 100) + '%';
+}
+function fbOk(msg){ return `<div class="fb ok"><b>✅ Верно. +100 XP</b>${msg}</div>`; }
+function fbBad(msg){ return `<div class="fb bad"><b>❌ Минус жизнь. Разбор:</b>${msg}</div>`; }
+
+function render(){
+  hud();
+  if(s.hp<=0) return gameOver();
+  if(s.task>=TASKS.length) return win();
+  const t = TASKS[s.task];
+  if(t.type==='quiz') return renderQuiz(t);
+  if(t.type==='half') return renderHalf(t);
+  if(t.type==='full') return renderFull(t);
+}
+
+function renderStart(){
+  elBar.style.width='0%';
+  screen.innerHTML = `
+    <div class="tag lime">мини-курс · игра · 10 заданий</div>
+    <h1>Ионно-электронный баланс за 15 минут</h1>
+    <p class="sub">Качаешь полуреакции как скилл: сначала степени окисления, потом собираешь <span class="kbd">MnO₄⁻ → Mn²⁺</span> руками, потом побеждаешь босса <span class="kbd">Cr₂O₇²⁻ + Fe²⁺</span>. 3 жизни. Ошибся — получаешь разбор, а не «подумай еще».</p>
+    <div class="row2">
+      <div class="pill">⚡ 4 уровня: разведка → полуреакции → среда → босс</div>
+      <div class="pill">🧪 Правило: O — водой, H — H⁺/OH⁻, заряд — e⁻</div>
+    </div>
+    <button class="btn" onclick="start()">▶ НАЧАТЬ ЗАМЕС</button>
+    <button class="btn ghost" onclick="cheat()">📖 Сначала шпаргалка (30 сек)</button>`;
+}
+
+function renderQuiz(t){
+  screen.innerHTML = `
+    <div class="tag cyan">Уровень ${t.lvl+1} · ${LEVELS[t.lvl]}</div>
+    <h2>${t.q}</h2>
+    <div class="opts">${t.opts.map((o,i)=>`<button class="opt" onclick="answerQuiz(${i})">${o}</button>`).join('')}</div>
+    <div id="fb"></div>`;
+}
+
+function renderHalf(t){
+  const neutral = t.mode==='neutral';
+  screen.innerHTML = `
+    <div class="tag cyan">Уровень ${t.lvl+1} · ${LEVELS[t.lvl]}</div>
+    <h2>${t.title}</h2>
+    <p class="sub">${t.prompt}</p>
+    <div class="eq">${t.title}</div>
+    <div class="grid3">
+      ${neutral ? `
+        <label class="mini"><span>H₂O слева</span><input id="inA" type="number" min="0" max="20" value="0"></label>
+        <label class="mini"><span>OH⁻ справа</span><input id="inB" type="number" min="0" max="20" value="0"></label>
+        <label class="mini"><span>e⁻ (штук)</span><input id="inC" type="number" min="0" max="20" value="0"></label>`
+      : `
+        <label class="mini"><span>H⁺</span><input id="inA" type="number" min="0" max="20" value="0"></label>
+        <label class="mini"><span>H₂O</span><input id="inB" type="number" min="0" max="20" value="0"></label>
+        <label class="mini"><span>e⁻ (штук)</span><input id="inC" type="number" min="0" max="20" value="0"></label>`}
+    </div>
+    <button class="btn cyan" onclick="answerHalf()">ПРОВЕРИТЬ ПОЛУРЕАКЦИЮ</button>
+    <div id="fb"></div>`;
+}
+
+function renderFull(t){
+  screen.innerHTML = `
+    <div class="tag">Уровень ${t.lvl+1} · ${LEVELS[t.lvl]}</div>
+    <h2>${t.title}</h2>
+    <p class="sub">${t.prompt}</p>
+    <div class="eq"><div class="coef-row">
+      <input id="c0" type="number" min="1" max="14" value="1"> ${t.title.includes('дихромат')||t.prompt.includes('Cr')?'Cr₂O₇²⁻':'MnO₄⁻'} +
+      <input id="c1" type="number" min="1" max="14" value="1"> ${t.prompt.includes('Fe')?'Fe²⁺':'SO₃²⁻'} +
+      <input id="c2" type="number" min="1" max="14" value="1"> H⁺ →<br>
+      <input id="c3" type="number" min="1" max="14" value="1"> ${t.prompt.includes('Fe')?'Cr³⁺':'Mn²⁺'} +
+      <input id="c4" type="number" min="1" max="14" value="1"> ${t.prompt.includes('Fe')?'Fe³⁺':'SO₄²⁻'} +
+      <input id="c5" type="number" min="1" max="14" value="1"> H₂O
+    </div></div>
+    <button class="btn" onclick="answerFull()">СОБРАТЬ УРАВНЕНИЕ</button>
+    <div id="fb"></div>`;
+}
+
+window.start = ()=>{ s={task:0,hp:3,xp:0}; render(); };
+window.cheat = ()=>{
+  screen.innerHTML = `
+    <div class="tag lime">шпаргалка</div>
+    <h2>3 правила — tatuируй</h2>
+    <p class="sub">1. <b>O балансим H₂O.</b> 2. <b>H балансим:</b> кислота — H⁺, щелочь — H₂O/OH⁻. 3. <b>Заряд балансим e⁻.</b> Потом НОК электронов, складываем, сокращаем. Среда решает продукт: MnO₄⁻ в кислоте → Mn²⁺, в нейтрали → MnO₂, в щелочи → MnO₄²⁻.</p>
+    <div class="eq">MnO₄⁻ + 8H⁺ + 5e⁻ → Mn²⁺ + 4H₂O</div>
+    <button class="btn" onclick="start()">ПОНЯЛ, В БОЙ</button>`;
+};
+
+window.answerQuiz = (i)=>{
+  const t = TASKS[s.task];
+  const box = document.getElementById('fb');
+  const btns = [...document.querySelectorAll('.opt')];
+  if(i===t.correct){ s.xp+=100; box.innerHTML = fbOk(t.explain) + `<button class="btn" onclick="next()">ДАЛЬШЕ →</button>`; btns[i].classList.add('ok'); }
+  else { s.hp--; btns[i].classList.add('fail'); btns[t.correct].classList.add('ok');
+    box.innerHTML = fbBad(t.explain) + `<button class="btn ghost" onclick="next()">ДАЛЬШЕ (${s.hp} ❤ осталось)</button>`; }
+  hud();
+  btns.forEach(b=>b.disabled=true);
+};
+
+// фикс для задания SO3: там H справа, но для простоты игры спрашиваем H₂O и e, а H считаем справа
+window.answerHalf = ()=>{
+  const t = TASKS[s.task];
+  const box = document.getElementById('fb');
+  const a=+document.getElementById('inA').value, b=+document.getElementById('inB').value, c=+document.getElementById('inC').value;
+  let ok=false;
+  if(t.title.includes('SO₃')){
+    // SO3 + H2O -> SO4 + 2H+ : H2O=1, e=2, а поле H трактуем как H+ справа =2
+    ok = (a===2 && b===1 && c===2);
+  } else if(t.mode==='neutral'){
+    ok = (a===t.ans.h2o && b===t.ans.oh && c===t.ans.e);
+  } else {
+    ok = (a===t.ans.h && b===t.ans.h2o && c===t.ans.e);
+  }
+  // подмена подписей для SO3 чтобы не путать
+  if(t.title.includes('SO₃') && !document.getElementById('soFixed')){
+    // ничего, объяснение ниже закроет
+  }
+  if(ok){ s.xp+=150; box.innerHTML = fbOk(t.explain.replace('H⁺ = 0 слева','H⁺ справа')) + `<button class="btn" onclick="next()">ДАЛЬШЕ →</button>`; }
+  else {
+    s.hp--;
+    let hint = t.title.includes('SO₃')
+      ? 'Подсказка: O 3→4, значит 1 H₂O <b>слева</b>. Тогда справа вылезут 2H⁺. Электронов 2. Вбивать: H⁺=2, H₂O=1, e⁻=2. Да, тут H⁺ справа — это и есть прикол окисления.'
+      : t.explain;
+    box.innerHTML = fbBad(hint) + `<button class="btn ghost" onclick="next()">ДАЛЬШЕ (${s.hp} ❤)</button>`;
+  }
+  hud();
+};
+
+window.answerFull = ()=>{
+  const t = TASKS[s.task];
+  const v = [0,1,2,3,4,5].map(i=>+document.getElementById('c'+i).value);
+  const box = document.getElementById('fb');
+  const ok = v.every((x,i)=>x===t.ans[i]);
+  if(ok){ s.xp+=200; box.innerHTML = fbOk(t.explain) + `<button class="btn" onclick="next()">ДАЛЬШЕ →</button>`; }
+  else { s.hp--; box.innerHTML = fbBad(t.explain + `<br>Ты вбил: ${v.join('-')}, а надо: ${t.ans.join('-')}. Проверяй НОК электронов и заряды.`) + `<button class="btn ghost" onclick="next()">ДАЛЬШЕ (${s.hp} ❤)</button>`; }
+  hud();
+};
+
+window.next = ()=>{ s.task++; render(); };
+
+function gameOver(){
+  elBar.style.width = Math.round(s.task/TASKS.length*100)+'%';
+  screen.innerHTML = `<div class="tag">поражение</div><h1>Жизни кончились. Бывает.</h1>
+  <p class="sub">Ты набрал ${s.xp} XP и дошел до задания ${s.task+1}/${TASKS.length}. Разбор ошибок — уже в голове. Реванш?</p>
+  <button class="btn" onclick="start()">↻ ЕЩЕ РАЗ</button>`;
+}
+function win(){
+  elBar.style.width='100%'; hud();
+  const rank = s.xp>=1400 ? 'Легенда Redox' : s.xp>=1000 ? 'Мастер полуреакций' : 'Крепкий боец';
+  screen.innerHTML = `<div class="tag lime">${rank} · ${s.xp} XP</div><h1>Ты разобрал ионно-электронный баланс 👊</h1>
+  <p class="sub">Теперь ты умеешь: находить окислитель, балансить O водой, H — H⁺/OH⁻, заряд — электронами, собирать полное уравнение и учитывать среду. Осталось закрепить на своих реакциях из учебника.</p>
+  <div class="eq">2MnO₄⁻ + 5SO₃²⁻ + 6H⁺ → 2Mn²⁺ + 5SO₄²⁻ + 3H₂O</div>
+  <div class="row2"><button class="btn" onclick="start()">СЫГРАТЬ ЕЩЕ</button>
+  <button class="btn ghost" onclick="renderStart()">НА ГЛАВНУЮ</button></div>`;
+}
+
+// спец-обработка подписей для SO3 при рендере: переименовать H в H+ справа
+const _renderHalf = renderHalf;
+renderHalf = function(t){
+  _renderHalf(t);
+  if(t.title.includes('SO₃')){
+    const l = document.querySelectorAll('label.mini span');
+    if(l[0]) l[0].textContent = 'H⁺ (справа)';
+  }
+};
+
+renderStart();
+</script>
+</body>
+</html>
